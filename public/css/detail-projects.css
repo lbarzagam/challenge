@@ -1,0 +1,113 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 400;
+    padding: 0;   
+    
+}
+
+.container {
+    max-width: 800px;
+    min-width: 600px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #ffffff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+.project-detail {
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #e9ecef;
+}
+.project-detail h2 {
+    color: #080808ea;
+    text-align: center;
+    font-size: 24px;
+}
+
+.project-title {
+    font-size: 2em;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.project-description,
+.project-due-date {
+    margin-bottom: 20px;
+}
+
+.project-description h2,
+.project-due-date h2 {
+    font-size: 1.5em;
+    color: #007bff;
+    margin-bottom: 10px;
+}
+
+.project-description p,
+.project-due-date p {
+    font-size: 1em;
+    color: #007bff;
+    line-height: 1.6;
+}
+
+.project-due-date p {
+    font-weight: bold;
+}
+
+/****************Estilos para los formularios de enviar y eliminar***************************/
+
+.container-form {
+    display: flex;
+    justify-content: space-between;
+    padding: 1px;
+    max-width: 1200px;
+    margin: 0;
+    width: 200;
+}
+
+.form-column {
+    flex: 1; /* Cada columna toma el mismo ancho */
+    margin: 0 1px; /* Espacio entre columnas */
+   
+    padding: 1px;
+    border-radius: 1px;
+    box-shadow: 0 0 0px rgba(0, 0, 0, 0.1);
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    margin-bottom: 5px;
+}
+
+input {
+    margin-bottom: 15px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    padding: 10px;
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.tarea-list {
+    text-align: center;
+    color: #333;
+}
