@@ -27,15 +27,14 @@ class AuthAssignedUserProjectMiddleware
         $user = Auth::user();
 
         // Verificar si la ruta es para un proyecto
-        if ($request->route('webprojects')) {
-            $project = Project::find($request->route('webprojects'));
+        if ($request->route('projects')) {
+            $project = Project::find($request->route('projects'));
 
             // Verificar si el usuario es el creador del proyecto
             if ($project && $project->user_id !== $user->id) {
-                return redirect()->route('webprojects.index')->with('error', 'No tienes permiso para modificar este proyecto.');
+                return redirect()->route('projects.index')->with('error', 'No tienes permiso para modificar este proyecto.');
             }
         }
-
 
         // Verificar si la ruta es para una tarea
         if ($request->route('tasks')) {

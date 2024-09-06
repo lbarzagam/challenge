@@ -19,7 +19,11 @@
         <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="btn btn-primary">
             Cerrar Sesión
         </a>
-        <a href="{{ route('webprojects.index') }}" class="btn btn-primary">Listado de Proyectos</a>
+        
+        @if (Auth::check())
+            <a href="{{ route('webprojects.index') }}" class="btn btn-primary">Listado de Proyectos</a>
+        @endif
+
         <div>
             @if (Auth::check())
                 <span>Bienvenido, {{ Auth::user()->name }}</span>
