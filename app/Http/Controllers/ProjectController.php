@@ -45,14 +45,13 @@ class ProjectController extends Controller
     }
 
     //Retorna la vista para ver el detalle de un proyecto y sus tareas asociadas si tiene
-    public function show(Project $project)
+    public function show(Request $request, Project $project)
     {
         //Se obtiene el proyecto desde la BD y la lista de tareas
-        $projectDetail = Project::find($project->id);
-        $taskList = $projectDetail->tasks;
+        $taskList = $project->tasks;
 
         return view('projects.show', [
-            'project' => $projectDetail, //retorna el proyecto            
+            'project' => $project, //retorna el proyecto            
             'taskList' => $taskList //retorna las tareas asociadas al proyecto
         ]);
     }

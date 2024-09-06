@@ -10,7 +10,7 @@ use App\Models\Task;
 
 class AuthAssignedUserProjectMiddleware
 {
-     /**
+    /**
      * Handle an incoming request.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -23,29 +23,29 @@ class AuthAssignedUserProjectMiddleware
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Debes estar autenticado para acceder a esta ruta.');
         }
-
         $user = Auth::user();
 
         // Verificar si la ruta es para un proyecto
-        if ($request->route('projects')) {
-            $project = Project::find($request->route('projects'));
+        if ($request->is('projects*')) {
+            // Obtener el proyecto desde la ruta
+            $project = $request->route('project');
 
-            // Verificar si el usuario es el creador del proyecto
-            if ($project && $project->user_id !== $user->id) {
-                return redirect()->route('projects.index')->with('error', 'No tienes permiso para modificar este proyecto.');
+            // Verificar si el proyecto existe y si el usuario está relacionado con el proyecto
+           if (($project!=null) && !($project->users()->where('user_id', $user->id)->exists())) {            
+                return redirect()->route('webprojects.index');//->with('error', 'No tienes permiso para modificar este proyecto.');
             }
         }
-
+        
         // Verificar si la ruta es para una tarea
-        if ($request->route('tasks')) {
-            $task = Task::find($request->route('tasks'));
+        if ($request->is('tasks*')) {
+            $task = Task::find($request->route('task'));  // Obtener la tarea
 
             if ($task) {
                 $project = $task->project;
 
-                // Verificar si el usuario es el creador del proyecto o un usuario asignado al proyecto
+                // Verificar si el usuario es el creador del proyecto o un colaborador asignado
                 if ($project->user_id !== $user->id && !$project->users->contains($user->id)) {
-                    return redirect()->route('projects.index')->with('error', 'No tienes permiso para modificar esta tarea.');
+                    return redirect()->route('webprojects.index')->with('error', 'No tienes permiso para modificar esta tarea.');
                 }
             }
         }
