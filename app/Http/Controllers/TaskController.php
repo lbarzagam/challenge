@@ -50,9 +50,13 @@ class TaskController extends Controller
         ]);
     }
 
-    public function showTask($project_id, Task $task)
+    public function showTask($project_id, $task)
     {
-        return view('tasks.show', compact('task'));
+        $task = Task::find($task);
+        if($task !=null)
+            return view('tasks.show', compact('task'));
+        
+        return redirect()->route('webprojects.index');
     }
 
     public function edit($project_id, Task $task)

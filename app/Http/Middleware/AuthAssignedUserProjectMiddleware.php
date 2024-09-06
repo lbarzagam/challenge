@@ -35,22 +35,20 @@ class AuthAssignedUserProjectMiddleware
             if (($project != null) && !($project->users()->where('user_id', $user->id)->exists())) {
                 return redirect()->route('webprojects.index'); //->with('error', 'No tienes permiso para modificar este proyecto.');
             }
-        }
 
-        // Verificar si la ruta es para una tarea
-        if ($request->is('tasks*')) {
-            $task = Task::find($request->route('task'));  // Obtener la tarea
-
-            if ($task) {
+            $task = Task::find($request->route('task'));
+            if ($task != null) {
                 $project = $task->project;
 
-                // Verificar si el usuario es el creador del proyecto o un colaborador asignado
-                if ($project->user_id !== $user->id && !$project->users->contains($user->id)) {
-                    return redirect()->route('webprojects.index')->with('error', 'No tienes permiso para modificar esta tarea.');
+                if ($project != null) {
+                    // Verificar si el usuario es el creador del proyecto o un colaborador asignado
+                    if(!($project->users()->where('user_id', $user->id)->exists())){
+                    //if (!$project->users->contains($user->id)) {
+                        return redirect()->route('webprojects.index')->with('error', 'No tienes permiso para modificar esta tarea.');
+                    }
                 }
             }
         }
-
         return $next($request);
     }
 }
