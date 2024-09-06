@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Http\Controllers\ProjectController;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,14 +29,14 @@ class AuthAssignedUserProjectMiddleware
         // Verificar si la ruta es para un proyecto
         if ($request->is('projects*')) {
             // Obtener el proyecto desde la ruta
-            $project = $request->route('project');
+            $project = Project::find($request->route('project'));
 
             // Verificar si el proyecto existe y si el usuario está relacionado con el proyecto
-           if (($project!=null) && !($project->users()->where('user_id', $user->id)->exists())) {            
-                return redirect()->route('webprojects.index');//->with('error', 'No tienes permiso para modificar este proyecto.');
+            if (($project != null) && !($project->users()->where('user_id', $user->id)->exists())) {
+                return redirect()->route('webprojects.index'); //->with('error', 'No tienes permiso para modificar este proyecto.');
             }
         }
-        
+
         // Verificar si la ruta es para una tarea
         if ($request->is('tasks*')) {
             $task = Task::find($request->route('task'));  // Obtener la tarea

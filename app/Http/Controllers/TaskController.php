@@ -50,9 +50,8 @@ class TaskController extends Controller
         ]);
     }
 
-    public function show($project_id, Task $task)
+    public function showTask($project_id, Task $task)
     {
-
         return view('tasks.show', compact('task'));
     }
 
