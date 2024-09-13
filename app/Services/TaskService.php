@@ -13,8 +13,8 @@ class TaskService
 {
     public function listTaskProject($project)
     {
-        $project = Project::find($project->project_id);        
-        if(!empty($project))
+        $project = Project::find($project->project_id);
+        if (!empty($project))
             return;
 
         if (!($project instanceof Project))
@@ -37,7 +37,7 @@ class TaskService
         return $taskUpdate->update($request->all());
     }
 
-    public function updateTask(Request $request, $task_id)
+    public function updateTask(Request $request, $task_id, $api)
     {
         // Buscar la tarea con el id proporcionado
         $task = Task::find($task_id);
@@ -51,27 +51,31 @@ class TaskService
 
         $project_id = $task->project_id;
 
-        // Validar los datos del request
-        $validator = Validator::make($request->all(), [
-            'title' => [
-                'required',
-                'string',
-                'max:255',
-                'min:5',
-                Rule::unique('tasks')->where(function ($query) use ($project_id) {
-                    return $query->where('project_id', $project_id);
-                })->ignore($task->id),
-            ],
-            'description' => 'nullable|string',
-            'completed' => 'boolean',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422); // 422 Unprocessable Entity
+        if ($api) {
+            // Validar los datos del request
+            $validator = Validator::make($request->all(), [
+                'title' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    'min:5',
+                    Rule::unique('tasks')->where(function ($query) use ($project_id) {
+                        return $query->where('project_id', $project_id);
+                    })->ignore($task->id),
+                ],
+                'description' => 'nullable|string',
+                'completed' => 'boolean',
+            ]);
+            
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $validator->errors()
+                ], 422); // 422 Unprocessable Entity
+            }
         }
+
+
 
         // Verificar que el usuario autenticado esté autorizado para actualizar la tarea
         if (!$this->userHasPermit($task)) {
@@ -120,7 +124,7 @@ class TaskService
     }
 
     public function userHasPermit(Task $task)
-    {        
+    {
         // Verificar si el usuario autenticado pertenece a los usuarios del proyecto
         return $task->project->users()->where('user_id', auth()->id())->exists();
     }

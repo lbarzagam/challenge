@@ -14,22 +14,9 @@ class ProjectService
 {
     public function listProjectUser()
     {
-        if (!Auth::check()) {
-            // El usuario no está autenticado
-            $error = [
-                'message' => 'Usuario no autorizado',
-                'success' => false
-            ];
-            return $error;
-        }
         //Se obtiene la referencia del user autenticado para atarlos a los proyectos 
         $user = Auth::user();
-
-        //Se consulta la BD para obtener el usuario del Model, para obtener los proyectos asociados 
-        //a traves de la relacion project
-        $userBd = User::find($user->id);
-
-        return $userBd->projects;
+        return $user->projects;
     }
 
     public function getProjectById($project_id)
@@ -43,6 +30,7 @@ class ProjectService
 
     public function store(Request $request)
     {
+        //Eliminar despues
         if (!Auth::check()) {
             // El usuario no está autenticado, se envia un mensaje de error 
             $error = [
@@ -69,6 +57,7 @@ class ProjectService
 
     public function update(Request $request)
     {
+         //Eliminar despues
         if (!Auth::check()) {
             // El usuario no está autenticado, se envia un mensaje de error 
             $error = [
@@ -107,29 +96,31 @@ class ProjectService
         // Verificar si el usuario autenticado pertenece a los usuarios del proyecto
         $exist = $project->users()->where('user_id', auth()->id())->exists();
         return $exist;
-    }
+    }  
 
 
-    public function updateProject(Request $request, $project_id)
+    public function updateProject(Request $request, $project_id, $isApi)
     {
-        // Validación de los datos del request
-        $validator = Validator::make($request->all(), [
-            'name' => [
-                'required',
-                'min:3',
-                'max:100',
-                Rule::unique('project_user', 'name')
-                    ->where(function ($query) {
-                        return $query->where('user_id', auth()->id());
-                    })
-                    ->ignore($project_id, 'project_id') // Ignorar el nombre del proyecto actual
-            ],
-            'description' => 'min:3|max:255',
-            'due_date' => 'required|date|after_or_equal:today'
-        ]);
+        // Validación de los datos del request si es desde la api
+        if ($isApi) {
+            $validator = Validator::make($request->all(), [
+                'name' => [
+                    'required',
+                    'min:3',
+                    'max:100',
+                    Rule::unique('project_user', 'name')
+                        ->where(function ($query) {
+                            return $query->where('user_id', auth()->id());
+                        })
+                        ->ignore($project_id, 'project_id') // Ignorar el nombre del proyecto actual
+                ],
+                'description' => 'min:3|max:255',
+                'due_date' => "required|date|after_or_equal:today,{$project_id}"
+            ]);
 
-        if ($validator->fails()) {
-            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+            if ($validator->fails()) {
+                return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+            }
         }
 
         // Obtener el proyecto
@@ -196,5 +187,4 @@ class ProjectService
             'project' => $project
         ], 200);
     }
-   
 }

@@ -28,10 +28,6 @@ class ProjectController extends Controller
 
     public function index()
     {
-        //Si no esta autenticado se redirecciona al login
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
         //Se obtiene la lista de Proyectos por usuario desde el servicio "projectService->listProjectUser" 
         $projectList = $this->projectService->listProjectUser();
         return view('projects.index', compact('projectList'));
@@ -39,17 +35,12 @@ class ProjectController extends Controller
     //Retorna la vista para crear un proyecto
     public function create()
     {
-        if (!Auth::check())
-            return redirect()->route('login');
         return view('projects.create-project');
     }
 
     //Retorna la vista para ver el detalle de un proyecto y sus tareas asociadas si tiene
     public function showProject(Request $request, $project_id)
     {
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
         //Se obtiene el proyecto desde la BD y la lista de tareas
         $project = Project::find($project_id);
 
@@ -65,61 +56,92 @@ class ProjectController extends Controller
     }
 
     //Muestra la vista para la edicion de un proyecto
-    public function edit(Project $project)
+    public function edit($project_id)
     {
-        if (!Auth::check())
-            return redirect()->route('login');
+        $project = Project::find($project_id);
         return view('projects.edit-project', compact('project'));
     }
 
     //Crear el proyecto y asociarlo al usuario logueado
     public function store(Request $request)
     {
-        if (Auth::check()) {
-            // El usuario aun está autenticado, se continua con el flujo de creacion de un proyecto
+        $request->validate([
+            'name' => [
+                //Regla de validacion para que el "name" del proyecto sea unico en cada usuario autenticado
+                //Se hace necesario consultar la tabla pivote project_user por el "name" de proyecto y el "user_id"
+                'required',
+                'min:3',
+                'max:100',
+                Rule::unique('project_user', 'name')->where(function ($query) {
+                    return $query->where('user_id', auth()->id());
+                })
+            ],
+            'description' => 'min:3|max:255',
+            'due_date' => 'required|date|after_or_equal:today'
+        ]);
 
-            $request->validate([
-                'name' => [
-                    //Regla de validacion para que el "name" del proyecto sea unico en cada usuario autenticado
-                    //Se hace necesario consultar la tabla pivote project_user por el "name" de proyecto y el "user_id"
-                    'required',
-                    'min:3',
-                    'max:100',
-                    Rule::unique('project_user', 'name')->where(function ($query) {
-                        return $query->where('user_id', auth()->id());
-                    })
-                ],
-                'description' => 'min:3|max:255',
-                'due_date' => 'required|date|after_or_equal:today'
-            ]);
+        //Crear el proyecto en el servicio "projectService->store" y obtener la referencia para asignarle a la vista
+        $project = $this->projectService->store($request);
 
-            //Crear el proyecto en el servicio "projectService->store" y obtener la referencia para asignarle a la vista
-            $project = $this->projectService->store($request);
-
-            //retornar la vista lista de proyectos
-            return redirect()->route('webprojects.index', $project);
-        }
+        //retornar la vista lista de proyectos
+        return redirect()->route('webprojects.index', $project);
     }
 
     //Actualizar el proyecto y devolver a la vista de detalles
-    public function update(Request $request, Project $project)
+    public function update(Request $request, $project_id)
     {
-        if (!Auth::check())
-            return redirect()->route('login');
+        $request->validate([
+            'name' => [
+                //Regla de validacion para que el "name" del proyecto sea unico en cada usuario autenticado
+                //Se hace necesario consultar la tabla pivote project_user por el "name" de proyecto y el "user_id"
+                'required',
+                'min:3',
+                'max:100',
+                Rule::unique('project_user', 'name')->where(function ($query) {
+                    return $query->where('user_id', auth()->id());
+                })->ignore($project_id, 'project_id')
+            ],
+            'description' => 'min:3|max:255',
+            'due_date' => 'required|date|after_or_equal:today'
+        ]);
+        //Se actualiza el projecto en el servicio, este metodo devuelve una respuesta en json, de ser necesario
+        //habria que decodicifarlo
+        $this->projectService->updateProject($request, $project_id, false);
 
-        $this->updateProject($request, $project->id);
         //Retornar la vista detalles del proyecto
-        return redirect()->route('webprojects.show', $project);
+        return redirect()->route('webprojects.show', $project_id);
     }
 
     //Eliminar un proyecto
-    public function destroy(Project $project)
+    public function destroy($project_id)
     {
-        if (!Auth::check())
-            return redirect()->route('login');
-
-        $project->delete();
+        //Buscar el proyecto en el servicio
+        $this->projectService->deleteProject($project_id);
         return redirect()->route('webprojects.index');
+    }
+
+    public function showAssingUser($project_id)
+    {
+        $user = Auth::user();
+        $users = User::where('id', '!=', $user->id)->get();
+        $project = Project::find($project_id);
+
+        return view('projects.assingUser', compact('project', 'users'));
+    }
+
+    public function updateUsers(Request $request, $project_id)
+    {
+        $project = Project::find($project_id);
+
+        $validated = $request->validate([
+            'selectedUsers' => ['required', 'array'], // Validamos que sea un array
+            'selectedUsers.*' => ['exists:users,id'], // Validamos que cada ítem exista en la tabla 'users'
+        ]);
+
+        $project->users()->attach($validated['selectedUsers'], ['name' => $project->name]);
+
+        //Retornar la vista detalles del proyecto
+        return redirect()->route('webprojects.show', $project_id);
     }
 
     /**********************************EndPoint de la APi****************************/
@@ -137,80 +159,56 @@ class ProjectController extends Controller
 
     public function createProject(Request $request)
     {
-        if (Auth::check()) {
-            // El usuario está autenticado, se continua con el flujo de creacion de un proyecto  
-            $validator = Validator::make($request->all(), [
-                'name' => [
-                    //Regla de validacion para que el "name" del proyecto sea unico en cada usuario autenticado
-                    //Se hace necesario consultar la tabla pivote project_user por el "name" de proyecto y el "user_id"
-                    'required',
-                    'min:3',
-                    'max:100',
-                    Rule::unique('project_user', 'name')->where(function ($query) {
-                        return $query->where('user_id', auth()->id());
-                    })
-                ],
-                'description' => 'min:3|max:255',
-                'due_date' => 'required|date|after_or_equal:today'
-            ]);
+        $validator = Validator::make($request->all(), [
+            'name' => [
+                //Regla de validacion para que el "name" del proyecto sea unico en cada usuario autenticado
+                //Se hace necesario consultar la tabla pivote project_user por el "name" de proyecto y el "user_id"
+                'required',
+                'min:3',
+                'max:100',
+                Rule::unique('project_user', 'name')->where(function ($query) {
+                    return $query->where('user_id', auth()->id());
+                })
+            ],
+            'description' => 'min:3|max:255',
+            'due_date' => 'required|date|after_or_equal:today'
+        ]);
 
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'errors' => $validator->errors()
-                ], 422); // 422 Unprocessable Entity
-            }
-
-            $projectList = $this->projectService->store($request);
+        if ($validator->fails()) {
             return response()->json([
-                'success' => true,
-                'project' => $projectList
-            ], 200);
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422); // 422 Unprocessable Entity
         }
+
+        $projectList = $this->projectService->store($request);
         return response()->json([
-            'message' => 'Usuario no autorizado',
-            'success' => false
-        ], 401);
+            'success' => true,
+            'project' => $projectList
+        ], 200);
     }
 
-    public function updateProject(Request $request, $project_id)
+    public function updateProject(Request $request, $project_id, $isApi)
     {
-        if (!Auth::check()) {
-            return response()->json([
-                'message' => 'Usuario no autorizado',
-                'success' => false
-            ], 401);
-        }
-
         // Delegar la lógica al servicio
-        return $this->projectService->updateProject($request, $project_id);
+        return $this->projectService->updateProject($request, $project_id, true);
     }
 
     public function deleteProject($project_id)
     {
-        if (!Auth::check()) {
-            return response()->json(['message' => 'Usuario no autorizado', 'success' => false], 401);
-        }
-
         return $this->projectService->deleteProject($project_id);
     }
 
     public function listTaskProject($project_id)
     {
-        if (Auth::check()) {
-            $taskList = $this->projectService->listarTaskProject($project_id);
-            return response()->json(['success' => true, 'taskList' => $taskList], 200);
-        }
-        return response()->json(['message' => 'Usuario no autorizado', 'success' => false], 401);
+
+        $taskList = $this->projectService->listarTaskProject($project_id);
+        return response()->json(['success' => true, 'taskList' => $taskList], 200);
     }
 
     /*Endpoint de proyectos relacionados con las tareas*/
     public function createTaskProject(Request $request, $project_id)
     {
-        if (!Auth::check()) {
-            return response()->json(['message' => 'Usuario no autorizado', 'success' => false], 401);
-        }
-
         // Delegar la creación de la tarea al servicio
         return $this->taskService->createTaskForProject($request, $project_id);
     }

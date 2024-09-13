@@ -29,6 +29,9 @@ Route::middleware(['auth', 'project.assigned'])->group(function () {
 
     Route::get('/projects/{project}', [ProjectController::class, 'showProject'])->name('webprojects.show');
 
+    Route::get('/projects/{id}/assign', [ProjectController::class, 'showAssingUser'])->name('webprojects.showAssignUser');
+    Route::put('/projects/{id}/assign', [ProjectController::class, 'updateUsers'])->name('webprojects.updateUsers');
+
     Route::post('/projects/{id}/tasks', [TaskController::class, 'create'])->name('tasks.createTask');
     Route::get('/projects/{project}/tasks/create', [TaskController::class, 'create'])->name('tasks.create');
     Route::post('/projects/{id}/tasks/store', [TaskController::class, 'store'])->name('tasks.storeTask');
@@ -38,6 +41,8 @@ Route::middleware(['auth', 'project.assigned'])->group(function () {
     Route::get('/projects/{id}/tasks/{task}/edit', [TaskController::class, 'edit'])->name('tasks.editTask');
     Route::delete('/projects/{id}/tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroyTask');
     Route::put('/projects/{id}/tasks/{task}', [TaskController::class, 'update'])->name('tasks.updateTask');
+
+    
 
 });
 

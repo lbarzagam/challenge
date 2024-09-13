@@ -11,7 +11,7 @@
             <ul class="project-list">
                 @foreach ($projectList as $project)
                     <li class="project-item">
-                        <h3><a href="{{ route('webprojects.show', $project) }}">{{ $project->name }}</a></h3>
+                        <h3><a href="{{ route('webprojects.show', $project->id) }}">{{ $project->name }}</a></h3>
                         <p>{{ $project->description }}</p>
                         <span class="due-date">Fecha de entrega: {{ $project->due_date }}</span>
                     </li>

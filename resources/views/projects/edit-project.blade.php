@@ -17,7 +17,7 @@
     @endif
 
     <h1>Actualizar Proyecto</h1>
-    <form action="{{ route('webprojects.update', $project) }}" method="POST">
+    <form action="{{ route('webprojects.update', $project->id) }}" method="POST">
         @csrf
         @method('PUT')
 

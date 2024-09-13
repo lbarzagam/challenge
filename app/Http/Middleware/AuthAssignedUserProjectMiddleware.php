@@ -8,6 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Project;
 use App\Models\Task;
+use Illuminate\Database\Eloquent\Collection;
+
+use function PHPUnit\Framework\isNull;
 
 class AuthAssignedUserProjectMiddleware
 {
@@ -28,12 +31,13 @@ class AuthAssignedUserProjectMiddleware
 
         // Verificar si la ruta es para un proyecto
         if ($request->is('projects*')) {
+            
             // Obtener el proyecto desde la ruta
             $project = Project::find($request->route('project'));
-
-            // Verificar si el proyecto existe y si el usuario está relacionado con el proyecto
+            // Verificar si el proyecto existe y si el usuario está relacionado con el proyecto siendo el creador o un 
+            //usuario asignado
             if (($project != null) && !($project->users()->where('user_id', $user->id)->exists())) {
-                return redirect()->route('webprojects.index'); //->with('error', 'No tienes permiso para modificar este proyecto.');
+                return redirect()->route('webprojects.index');
             }
 
             $task = Task::find($request->route('task'));
@@ -42,9 +46,10 @@ class AuthAssignedUserProjectMiddleware
 
                 if ($project != null) {
                     // Verificar si el usuario es el creador del proyecto o un colaborador asignado
-                    if(!($project->users()->where('user_id', $user->id)->exists())){
-                    //if (!$project->users->contains($user->id)) {
-                        return redirect()->route('webprojects.index')->with('error', 'No tienes permiso para modificar esta tarea.');
+                    if (!($project->users()->where('user_id', $user->id)->exists())) {
+                        if (!$project->users->contains($user->id)) {
+                            return redirect()->route('webprojects.index')->with('error', 'No tienes permiso para modificar esta tarea.');
+                        }
                     }
                 }
             }

@@ -25,28 +25,35 @@ class TaskController extends Controller
         return view('tasks.create-task', compact('project_id'));
     }
 
-    public function create(Project $project)
+    public function create($project)
     {
         //return $project;
         return view('tasks.create-task', compact('project'));
     }
 
-    public function store(Request $request, Project $project)
+    public function store(Request $request)
     {
         //Se crea la validacion en el controlador y no en un FormRequest porque son pocos campos a validar, de lo contrario
-        //debería crearse el FormRequest y modificar el metodo rules de este con las reglas de validación        
+        //debería crearse el FormRequest y modificar el metodo rules de este con las reglas de validación   
+        $project_id = $request->only('project_id');
         $request->validate([
-            'title' => 'required|string|max:255|min:5|unique:tasks,title,id',
+            'title' => [
+                'required',
+                'string',
+                'max:255',
+                'min:5',
+                Rule::unique('tasks')->where(function ($query) use ($project_id) {
+                    return $query->where('project_id', $project_id);
+                }),
+            ],
             'description' => 'nullable|string',
             'completed' => 'boolean',
         ]);
 
-        $this->taskService->crearTask($request->all());
-
+        $task = $this->taskService->crearTask($request->only('title','description', 'completed','project_id'));
         //Redireccionar a la ruta donde se muestra la vista del proyecto en el que creamos la tarea
-        $projectDetail = Project::find($request->project_id);
         return redirect()->route('webprojects.show', [
-            'project' => $projectDetail
+            'project' => $task->project
         ]);
     }
 
@@ -54,30 +61,46 @@ class TaskController extends Controller
     {
         $task = Task::find($task);
         if($task !=null)
-            return view('tasks.show', compact('task'));
+            return view('tasks.show', compact('task','project_id'));
         
         return redirect()->route('webprojects.index');
     }
 
-    public function edit($project_id, Task $task)
+    public function edit($project_id, $task_id)
     {
+        $task = Task::find($task_id);
         return view('tasks.edit-task', compact(['project_id', 'task']));
     }
 
-    public function update($project_id, Task $task, Request $request)
+    public function update($project_id, $task_id, Request $request)
     {
-        $this->taskService->updateTask($request, $task->id);   
+        $request->validate([
+            'title' => [
+                'required',
+                'string',
+                'max:255',
+                'min:5',
+                Rule::unique('tasks')->where(function ($query) use ($project_id) {
+                    return $query->where('project_id', $project_id);
+                })->ignore($task_id),
+            ],
+            'description' => 'nullable|string',
+            'completed' => 'boolean',
+        ]);
+
+        $this->taskService->updateTask($request, $task_id, false);   
 
         $projectDetail = Project::find($project_id);
+
+       
         return redirect()->route('webprojects.show', [
             'project' => $projectDetail
         ]);
     }
 
-    public function destroy($project_id, Task $task)
+    public function destroy($project_id, $task_id)
     {
-        $this->taskService->deleteTask($task->id);
-
+        $this->taskService->deleteTask($task_id);
         $projectDetail = Project::find($project_id);
 
         return redirect()->route('webprojects.show', [
@@ -98,7 +121,7 @@ class TaskController extends Controller
         }
 
         // Llamar al servicio para actualizar la tarea
-        return $this->taskService->updateTask($request, $task_id);       
+        return $this->taskService->updateTask($request, $task_id, true);       
     }
 
     public function deleteTask($task_id)

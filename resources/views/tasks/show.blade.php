@@ -9,14 +9,14 @@
 
             <div class="container-form">
                 <div class="form-column">
-                    <form action="{{ route('tasks.editTask', [$task->project_id, $task]) }}">
+                    <form action="{{ route('tasks.editTask', [$project_id, $task->id]) }}">
                         
                         <button type="submit" class="btn btn-primary">Editar</button>
                     </form>
                 </div>
                 
                 <div class="form-column">
-                    <form action="{{ route('tasks.destroyTask', [$task->project_id, $task]) }}" method="POST">
+                    <form action="{{ route('tasks.destroyTask', [$project_id, $task->id]) }}" method="POST">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-danger">Eliminar</button>

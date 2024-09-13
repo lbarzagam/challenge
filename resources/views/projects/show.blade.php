@@ -9,18 +9,24 @@
 
             <div class="container-form">
                 <div class="form-column">
-                    <form action="{{ route('webprojects.edit', $project) }}">
+                    <form action="{{ route('webprojects.edit', $project->id) }}">
                         <button type="submit" class="btn btn-primary">Editar</button>
                     </form>
                 </div>
                 <div class="form-column">
-                    <form action="{{ route('webprojects.destroy', $project) }}" method="POST">
+                    <form action="{{ route('webprojects.destroy', $project->id) }}" method="POST">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-danger">Eliminar</button>
                     </form>
                 </div>
+                <div class="form-column">
+                    <form action="{{ route('webprojects.showAssignUser', $project->id) }}">                    
+                        <button type="submit" class="btn btn-success">Asignar Usuarios</button>
+                    </form>
+                </div>
             </div>
+           
             
             <h3 class="project-title">{{ $project->name }}</h3>
 

@@ -16,10 +16,10 @@
         @endif
 
         <h1>Crear Tarea</h1>
-        <form action="{{ route('tasks.storeTask', $project->id) }}" method="POST">
+        <form action="{{ route('tasks.storeTask', $project) }}" method="POST">
             @csrf
             <!-- Campo Name -->
-            <input type="hidden" name="project_id" id="project_id" value="{{ $project->id }}">
+            <input type="hidden" name="project_id" id="project_id" value="{{ $project }}">
 
             <div class="form-group">
                 <label for="title">Title</label>

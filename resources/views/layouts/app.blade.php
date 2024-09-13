@@ -14,30 +14,27 @@
     <header>
     </header>
     <div>
-        <a href="{{ route('register') }}" class="btn btn-primary">Register</a>
-        <a href="{{ route('login') }}" class="btn btn-primary">Login</a>
-        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="btn btn-primary">
-            Cerrar Sesión
-        </a>
-        
         @if (Auth::check())
+            <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+                class="btn btn-primary">
+                Cerrar Sesión
+            </a>
             <a href="{{ route('webprojects.index') }}" class="btn btn-primary">Listado de Proyectos</a>
-        @endif
-
-        <div>
-            @if (Auth::check())
+            <div>
                 <span>Bienvenido, {{ Auth::user()->name }}</span>
                 <!-- Formulario oculto -->
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
                     @csrf
                 </form>
-            @else
+            </div>
+        @else
+            <a href="{{ route('register') }}" class="btn btn-primary">Register</a>
+            <a href="{{ route('login') }}" class="btn btn-primary">Login</a>
+            <div>
                 <span>Bienvenido</span>
-            @endif
-
-        </div>
+            </div>
+        @endif
     </div>
-
 
     <div>
         @yield('content')
